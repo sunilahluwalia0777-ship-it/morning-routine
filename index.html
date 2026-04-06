@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Court Ready">
+<title>Court Ready · Morning Mobility</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --green-dark: #1b4332;
+    --clay: #c9714a;
+    --clay-pale: #fce4d6;
+    --cream: #faf7f2;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #888;
+    --line: rgba(0,0,0,0.08);
+    --radius: 16px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; overflow-x: hidden; }
+
+  .hero { background: var(--green-dark); padding: 56px 24px 32px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; border-radius: 50%; background: rgba(82,183,136,0.15); }
+  .hero::after { content: ''; position: absolute; bottom: -40px; left: 20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(82,183,136,0.08); }
+  .hero-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-light); margin-bottom: 8px; }
+  .hero-title { font-family: 'DM Serif Display', serif; font-size: 34px; color: #fff; line-height: 1.1; margin-bottom: 16px; }
+  .hero-title em { font-style: italic; color: var(--green-light); }
+  .hero-meta { display: flex; gap: 16px; }
+  .hero-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: rgba(255,255,255,0.8); }
+
+  .progress-wrap { background: var(--green-dark); padding: 0 24px 20px; }
+  .progress-track { height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; }
+  .progress-fill { height: 100%; background: var(--green-light); border-radius: 2px; width: 0%; transition: width 0.5s ease; }
+  .progress-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: rgba(255,255,255,0.4); }
+
+  .content { padding: 20px 16px calc(32px + var(--safe-bottom)); }
+
+  .phase-head { display: flex; align-items: center; gap: 10px; padding: 20px 8px 12px; }
+  .phase-pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .phase-name { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); flex: 1; }
+  .phase-dur { font-size: 11px; color: var(--ink-muted); }
+
+  .card { background: #fff; border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; border: 1px solid var(--line); transition: box-shadow 0.2s; }
+  .card.active { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+  .card-head { display: flex; align-items: center; gap: 14px; padding: 16px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .card-head:active { background: rgba(0,0,0,0.02); }
+  .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .card-text { flex: 1; min-width: 0; }
+  .card-name { font-size: 16px; font-weight: 500; color: var(--ink); line-height: 1.2; }
+  .card-sub { font-size: 12px; color: var(--ink-muted); margin-top: 2px; font-weight: 300; }
+  .card-chevron { width: 24px; height: 24px; border-radius: 50%; background: var(--cream); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.25s ease, background 0.2s; font-size: 10px; color: var(--ink-muted); }
+  .card.active .card-chevron { transform: rotate(180deg); background: var(--green-pale); color: var(--green); }
+
+  .card-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .card.active .card-body { max-height: 700px; }
+
+  .card-inner { border-top: 1px solid var(--line); padding: 16px; }
+
+  /* ILLUSTRATION */
+  .ex-illustration {
+    background: var(--cream);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ex-illustration svg { display: block; }
+
+  .tennis-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--clay-pale); color: var(--clay); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
+  .cue-text { font-size: 14px; line-height: 1.7; color: var(--ink-soft); font-weight: 300; margin-bottom: 16px; }
+
+  .vid-link { display: inline-flex; align-items: center; gap: 8px; background: var(--green-dark); color: #fff; font-size: 13px; font-weight: 500; padding: 11px 18px; border-radius: 30px; text-decoration: none; transition: opacity 0.2s; }
+  .vid-link:active { opacity: 0.75; }
+
+  .timer-section { margin-bottom: 10px; }
+  .timer-bar-wrap { background: var(--cream); border-radius: 4px; height: 4px; margin-top: 10px; overflow: hidden; }
+  .timer-bar-fill { height: 100%; background: var(--green-light); border-radius: 4px; width: 100%; transition: width 1s linear; }
+  .timer-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .timer-display { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--green-dark); min-width: 56px; font-variant-numeric: tabular-nums; }
+  .timer-btn { background: var(--green); color: #fff; border: none; border-radius: 22px; padding: 8px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+  .timer-btn:active { opacity: 0.7; }
+  .timer-btn.running { background: var(--clay); }
+  .timer-reset { background: none; border: 1px solid var(--line); color: var(--ink-muted); border-radius: 22px; padding: 8px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; }
+
+  .done-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 8px; background: var(--green); color: #fff; border: none; border-radius: var(--radius); padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+  .done-btn:active { opacity: 0.75; }
+  .done-btn.done-state { background: var(--clay); }
+
+  .complete-banner { display: none; background: var(--green-dark); border-radius: var(--radius); padding: 24px; text-align: center; margin-top: 10px; margin-bottom: 10px; }
+  .complete-banner.show { display: block; }
+  .complete-emoji { font-size: 40px; margin-bottom: 8px; }
+  .complete-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; margin-bottom: 6px; }
+  .complete-sub { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 300; }
+
+  .footer { text-align: center; padding: 0 24px 32px; font-size: 11px; color: var(--ink-muted); font-weight: 300; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🎾 Morning routine</div>
+  <h1 class="hero-title">Court <em>Ready</em></h1>
+  <div class="hero-meta">
+    <span class="hero-chip">⏱ 15 minutes</span>
+    <span class="hero-chip">9 exercises</span>
+    <span class="hero-chip">4 phases</span>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="globalProg"></div></div>
+  <div class="progress-label">
+    <span id="progText">0 of 9 done</span>
+    <span id="progPct">0%</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PHASE 1 -->
+  <div class="phase-head">
+    <div class="phase-pip" style="background:#52b788;"></div>
+    <span class="phase-name">Phase 1 — Gentle warm-up</span>
+    <span class="phase-dur">3 min</span>
+  </div>
+
+  <!-- EX 0: Neck rolls -->
+  <div class="card" id="ex0">
+    <div class="card-head" onclick="toggleCard('ex0')">
+      <div class="card-icon" style="background:#d8f3dc;">🔄</div>
+      <div class="card-text">
+        <div class="card-name">Neck rolls</div>
+        <div class="card-sub">5 each side · 45 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <!-- Seated figure doing neck rolls, head tilted right then arcing down -->
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Figure 1: head tilted right -->
+          <g transform="translate(50,10)">
+            <!-- seat/chair suggestion -->
+            <rect x="10" y="90" width="60" height="6" rx="3" fill="#c8e6c9"/>
+            <rect x="15" y="96" width="8" height="20" rx="3" fill="#c8e6c9"/>
+            <rect x="57" y="96" width="8" height="20" rx="3" fill="#c8e6c9"/>
+            <!-- torso -->
+            <rect x="26" y="52" width="28" height="38" rx="8" fill="#2d6a4f"/>
+            <!-- arms -->
+            <line x1="26" y1="60" x2="10" y2="78" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="54" y1="60" x2="70" y2="78" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <!-- neck -->
+            <rect x="34" y="38" width="12" height="16" rx="4" fill="#52b788"/>
+            <!-- head tilted right -->
+            <circle cx="52" cy="28" r="17" fill="#52b788"/>
+            <!-- face dot -->
+            <circle cx="49" cy="25" r="2" fill="#1b4332"/>
+            <circle cx="56" cy="25" r="2" fill="#1b4332"/>
+            <!-- arc arrow showing rotation -->
+            <path d="M 52 10 A 18 18 0 0 1 68 28" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+            <polygon points="68,28 62,24 70,22" fill="#c9714a"/>
+          </g>
+          <!-- Arrow between figures -->
+          <text x="128" y="68" font-size="22" fill="#52b788" text-anchor="middle">→</text>
+          <!-- Figure 2: head tilted left / chin to chest -->
+          <g transform="translate(148,10)">
+            <rect x="10" y="90" width="60" height="6" rx="3" fill="#c8e6c9"/>
+            <rect x="15" y="96" width="8" height="20" rx="3" fill="#c8e6c9"/>
+            <rect x="57" y="96" width="8" height="20" rx="3" fill="#c8e6c9"/>
+            <rect x="26" y="52" width="28" height="38" rx="8" fill="#2d6a4f"/>
+            <line x1="26" y1="60" x2="10" y2="78" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="54" y1="60" x2="70" y2="78" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <rect x="34" y="38" width="12" height="16" rx="4" fill="#52b788"/>
+            <!-- head tilted left -->
+            <circle cx="28" cy="28" r="17" fill="#52b788"/>
+            <circle cx="25" cy="25" r="2" fill="#1b4332"/>
+            <circle cx="32" cy="25" r="2" fill="#1b4332"/>
+            <!-- arc arrow other direction -->
+            <path d="M 28 10 A 18 18 0 0 0 12 28" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+            <polygon points="12,28 18,24 10,22" fill="#c9714a"/>
+          </g>
+          <!-- label -->
+          <text x="130" y="122" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Slow roll, ear to shoulder each side</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Releases ball-watching tension</div>
+      <div class="cue-text">Sit or stand tall. Slowly drop your right ear toward your right shoulder. Roll your chin gently down toward your chest, then up to the left. Keep it slow — no fast circles. Breathe out on each drop.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex0">0:45</div>
+          <button class="timer-btn" id="btn-ex0" onclick="startTimer('ex0',45)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex0',45)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex0"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://us.physitrack.com/home-exercise-video/neck-rolls" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Watch video demo
+      </a>
+    </div></div>
+  </div>
+
+  <!-- EX 1: Arm circles -->
+  <div class="card" id="ex1">
+    <div class="card-head" onclick="toggleCard('ex1')">
+      <div class="card-icon" style="background:#d8f3dc;">🔁</div>
+      <div class="card-text">
+        <div class="card-name">Arm circles & cross-body swings</div>
+        <div class="card-sub">10 reps · 75 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Standing figure, arms making large circles -->
+          <!-- ground -->
+          <line x1="30" y1="118" x2="230" y2="118" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- torso -->
+          <rect x="116" y="52" width="28" height="40" rx="8" fill="#2d6a4f"/>
+          <!-- head -->
+          <circle cx="130" cy="36" r="16" fill="#52b788"/>
+          <circle cx="125" cy="33" r="2" fill="#1b4332"/>
+          <circle cx="133" cy="33" r="2" fill="#1b4332"/>
+          <!-- neck -->
+          <rect x="123" y="46" width="14" height="10" rx="4" fill="#52b788"/>
+          <!-- legs -->
+          <line x1="122" y1="92" x2="115" y2="118" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <line x1="138" y1="92" x2="145" y2="118" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <!-- Right arm raised up in circle -->
+          <line x1="144" y1="62" x2="172" y2="30" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- Left arm sweeping across -->
+          <line x1="116" y1="62" x2="82" y2="80" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- Circle arc for right arm -->
+          <path d="M 172 30 A 40 40 0 0 1 175 75" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+          <polygon points="175,75 168,68 178,66" fill="#c9714a"/>
+          <!-- Circle arc for left arm -->
+          <path d="M 82 80 A 40 40 0 0 1 85 30" stroke="#52b788" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+          <polygon points="85,30 79,38 90,38" fill="#52b788"/>
+          <text x="130" y="128" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Full arm circles, gradually bigger</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Warms rotator cuff for serves</div>
+      <div class="cue-text">Small forward arm circles, gradually bigger over 10 reps each arm. Then swing both arms across your body in a big hug, alternating which arm is on top. Feet shoulder-width, knees soft.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex1">1:15</div>
+          <button class="timer-btn" id="btn-ex1" onclick="startTimer('ex1',75)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex1',75)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex1"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.youtube.com/results?search_query=arm+circles+cross+body+swings+warm+up" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Search YouTube
+      </a>
+    </div></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase-head">
+    <div class="phase-pip" style="background:#378ADD;"></div>
+    <span class="phase-name">Phase 2 — Spine & hips</span>
+    <span class="phase-dur">5 min</span>
+  </div>
+
+  <!-- EX 2: Cat-cow -->
+  <div class="card" id="ex2">
+    <div class="card-head" onclick="toggleCard('ex2')">
+      <div class="card-icon" style="background:#e6f1fb;">🐱</div>
+      <div class="card-text">
+        <div class="card-name">Cat-cow</div>
+        <div class="card-sub">10 slow reps · 60 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- CAT pose (left) - back arched UP -->
+          <g transform="translate(10,10)">
+            <text x="55" y="10" font-size="9" fill="#888" text-anchor="middle" font-family="sans-serif">CAT</text>
+            <!-- hands -->
+            <ellipse cx="18" cy="98" rx="7" ry="5" fill="#52b788"/>
+            <ellipse cx="90" cy="98" rx="7" ry="5" fill="#52b788"/>
+            <!-- knees -->
+            <ellipse cx="28" cy="106" rx="7" ry="5" fill="#52b788"/>
+            <ellipse cx="82" cy="106" rx="7" ry="5" fill="#52b788"/>
+            <!-- arms -->
+            <line x1="18" y1="94" x2="30" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="90" y1="94" x2="78" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <!-- legs -->
+            <line x1="28" y1="103" x2="34" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="82" y1="103" x2="76" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <!-- arched back (up) -->
+            <path d="M 30 72 Q 55 40 78 72" stroke="#2d6a4f" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <!-- head dropped down -->
+            <circle cx="16" cy="68" r="13" fill="#52b788"/>
+            <circle cx="12" cy="65" r="2" fill="#1b4332"/>
+            <!-- arrow up -->
+            <text x="55" y="36" font-size="16" fill="#c9714a" text-anchor="middle">↑</text>
+          </g>
+          <!-- arrow between -->
+          <text x="132" y="75" font-size="20" fill="#52b788" text-anchor="middle">⇄</text>
+          <!-- COW pose (right) - back arched DOWN -->
+          <g transform="translate(148,10)">
+            <text x="55" y="10" font-size="9" fill="#888" text-anchor="middle" font-family="sans-serif">COW</text>
+            <ellipse cx="18" cy="98" rx="7" ry="5" fill="#52b788"/>
+            <ellipse cx="90" cy="98" rx="7" ry="5" fill="#52b788"/>
+            <ellipse cx="28" cy="106" rx="7" ry="5" fill="#52b788"/>
+            <ellipse cx="82" cy="106" rx="7" ry="5" fill="#52b788"/>
+            <line x1="18" y1="94" x2="26" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="90" y1="94" x2="82" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="28" y1="103" x2="32" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <line x1="82" y1="103" x2="78" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+            <!-- sagging back (down) -->
+            <path d="M 28 70 Q 55 90 80 70" stroke="#2d6a4f" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <!-- head lifted up -->
+            <circle cx="16" cy="58" r="13" fill="#52b788"/>
+            <circle cx="12" cy="55" r="2" fill="#1b4332"/>
+            <circle cx="20" cy="55" r="2" fill="#1b4332"/>
+            <text x="55" y="88" font-size="16" fill="#c9714a" text-anchor="middle">↓</text>
+          </g>
+          <text x="130" y="126" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Breathe in (cow) · Breathe out (cat)</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Bend-and-reach during rallies</div>
+      <div class="cue-text">Hands under shoulders, knees under hips. Inhale as you drop your belly and lift your tailbone (cow). Exhale as you round your back to the ceiling and tuck your chin (cat). Move with your breath, hold each end 2 s.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex2">1:00</div>
+          <button class="timer-btn" id="btn-ex2" onclick="startTimer('ex2',60)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex2',60)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex2"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.mayoclinic.org/healthy-lifestyle/stress-management/multimedia/cat-cow-pose/vid-20453581" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Watch on Mayo Clinic
+      </a>
+    </div></div>
+  </div>
+
+  <!-- EX 3: Thread the needle -->
+  <div class="card" id="ex3">
+    <div class="card-head" onclick="toggleCard('ex3')">
+      <div class="card-icon" style="background:#e6f1fb;">🌀</div>
+      <div class="card-text">
+        <div class="card-name">Thread the needle</div>
+        <div class="card-sub">8 each side · 90 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Figure on all fours, one arm threaded under body, other reaching up -->
+          <!-- Ground -->
+          <line x1="20" y1="118" x2="240" y2="118" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- Figure: on all fours, right arm reaching UP -->
+          <!-- knees on ground -->
+          <ellipse cx="158" cy="112" rx="9" ry="6" fill="#52b788"/>
+          <ellipse cx="108" cy="112" rx="9" ry="6" fill="#52b788"/>
+          <!-- left hand on ground -->
+          <ellipse cx="72" cy="112" rx="8" ry="5" fill="#52b788"/>
+          <!-- legs -->
+          <line x1="108" y1="108" x2="118" y2="82" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <line x1="158" y1="108" x2="148" y2="82" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <!-- torso -->
+          <line x1="118" y1="82" x2="148" y2="82" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round"/>
+          <!-- left arm down to ground -->
+          <line x1="118" y1="82" x2="72" y2="112" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- right arm reaching UP and back -->
+          <line x1="148" y1="82" x2="195" y2="42" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="198" cy="40" rx="8" ry="8" fill="#c9714a" opacity="0.7"/>
+          <!-- head (turned) on ground-side shoulder -->
+          <circle cx="104" cy="74" r="14" fill="#52b788"/>
+          <circle cx="100" cy="71" r="2" fill="#1b4332"/>
+          <!-- rotation arrow -->
+          <path d="M 185 55 A 30 30 0 0 0 155 38" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+          <polygon points="155,38 160,47 150,45" fill="#c9714a"/>
+          <text x="205" y="36" font-size="9" fill="#c9714a" font-family="sans-serif">reach up</text>
+          <text x="130" y="128" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Thread arm under, then open to ceiling</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Powers your groundstroke rotation</div>
+      <div class="cue-text">On all fours, place one hand behind your head. Rotate that elbow up toward the ceiling, opening your chest. Then thread it under your body toward the opposite side. Follow with your eyes. Keep hips still throughout.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex3">1:30</div>
+          <button class="timer-btn" id="btn-ex3" onclick="startTimer('ex3',90)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex3',90)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex3"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.peak-physio.com.au/exercise/thoracic-rotation-thread-the-needle/" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Watch demonstration
+      </a>
+    </div></div>
+  </div>
+
+  <!-- EX 4: Hip 90/90 -->
+  <div class="card" id="ex4">
+    <div class="card-head" onclick="toggleCard('ex4')">
+      <div class="card-icon" style="background:#e6f1fb;">🦋</div>
+      <div class="card-text">
+        <div class="card-name">Hip 90/90 switches</div>
+        <div class="card-sub">8 each side · 90 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Seated 90/90 position - front leg and side leg both at 90 deg -->
+          <!-- Ground -->
+          <line x1="20" y1="118" x2="240" y2="118" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- Hips on floor -->
+          <ellipse cx="130" cy="108" rx="22" ry="8" fill="#52b788" opacity="0.4"/>
+          <!-- Front leg (right) - shin parallel to torso, thigh to side -->
+          <line x1="130" y1="108" x2="168" y2="108" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <line x1="168" y1="108" x2="168" y2="80" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- Back leg (left) - thigh forward, shin to side -->
+          <line x1="130" y1="108" x2="130" y2="76" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <line x1="130" y1="76" x2="96" y2="76" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- 90° angle markers -->
+          <rect x="158" y="99" width="10" height="10" fill="none" stroke="#c9714a" stroke-width="1.5"/>
+          <rect x="130" y="76" width="10" height="10" fill="none" stroke="#c9714a" stroke-width="1.5"/>
+          <!-- Torso upright -->
+          <rect x="118" y="62" width="24" height="46" rx="8" fill="#2d6a4f" opacity="0"/>
+          <line x1="130" y1="108" x2="130" y2="62" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round"/>
+          <!-- Arms for support on ground -->
+          <line x1="122" y1="78" x2="100" y2="108" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="98" cy="110" rx="7" ry="5" fill="#52b788"/>
+          <line x1="138" y1="78" x2="160" y2="108" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="162" cy="110" rx="7" ry="5" fill="#52b788"/>
+          <!-- Head -->
+          <circle cx="130" cy="46" r="16" fill="#52b788"/>
+          <circle cx="126" cy="43" r="2" fill="#1b4332"/>
+          <circle cx="134" cy="43" r="2" fill="#1b4332"/>
+          <!-- neck -->
+          <line x1="130" y1="62" x2="130" y2="56" stroke="#52b788" stroke-width="7" stroke-linecap="round"/>
+          <!-- rotation arrows -->
+          <path d="M 155 90 A 28 28 0 0 0 108 88" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+          <polygon points="108,88 114,95 106,98" fill="#c9714a"/>
+          <text x="130" y="128" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Both knees at 90° · rotate hips to switch</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Pivoting & split-step recovery</div>
+      <div class="cue-text">Sit on the floor, both knees bent at 90° — one in front, one to the side. Gently lean toward the front knee, then rotate your hips to switch sides. Use your hands for support. Work to your comfortable edge only.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex4">1:30</div>
+          <button class="timer-btn" id="btn-ex4" onclick="startTimer('ex4',90)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex4',90)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex4"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://health.clevelandclinic.org/90-90-stretch" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Watch on Cleveland Clinic
+      </a>
+    </div></div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase-head">
+    <div class="phase-pip" style="background:#c9714a;"></div>
+    <span class="phase-name">Phase 3 — Lower body</span>
+    <span class="phase-dur">4 min</span>
+  </div>
+
+  <!-- EX 5: World's greatest -->
+  <div class="card" id="ex5">
+    <div class="card-head" onclick="toggleCard('ex5')">
+      <div class="card-icon" style="background:#fce4d6;">🦵</div>
+      <div class="card-text">
+        <div class="card-name">World's greatest stretch</div>
+        <div class="card-sub">5 each side · 90 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="140" viewBox="0 0 260 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Deep lunge, hand on floor, other arm reaching up -->
+          <line x1="20" y1="126" x2="240" y2="126" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- Back leg straight -->
+          <line x1="195" y1="126" x2="155" y2="86" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- Back foot -->
+          <ellipse cx="198" cy="126" rx="10" ry="5" fill="#52b788"/>
+          <!-- Front leg bent at knee -->
+          <line x1="92" y1="126" x2="118" y2="86" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- Front foot -->
+          <ellipse cx="88" cy="126" rx="12" ry="5" fill="#52b788"/>
+          <!-- Hip / pelvis area -->
+          <ellipse cx="140" cy="86" rx="20" ry="10" fill="#2d6a4f"/>
+          <!-- Torso -->
+          <line x1="140" y1="82" x2="128" y2="56" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round"/>
+          <!-- Left hand on floor beside front foot -->
+          <line x1="128" y1="56" x2="100" y2="118" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="97" cy="120" rx="8" ry="5" fill="#52b788"/>
+          <!-- Right arm reaching UP -->
+          <line x1="128" y1="56" x2="148" y2="16" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="150" cy="13" rx="9" ry="9" fill="#c9714a" opacity="0.7"/>
+          <!-- Head -->
+          <circle cx="118" cy="44" r="15" fill="#52b788"/>
+          <circle cx="114" cy="41" r="2" fill="#1b4332"/>
+          <circle cx="122" cy="41" r="2" fill="#1b4332"/>
+          <!-- Arrow for arm reaching up -->
+          <path d="M 148 28 A 22 22 0 0 0 128 20" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+          <polygon points="128,20 132,28 124,27" fill="#c9714a"/>
+          <text x="168" y="14" font-size="9" fill="#c9714a" font-family="sans-serif">reach!</text>
+          <text x="130" y="138" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Deep lunge · hand down · opposite arm up</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Hips, adductors & spine at once</div>
+      <div class="cue-text">Step into a lunge, right foot forward. Place right hand beside right foot. Rotate right arm up toward the ceiling, then bring elbow down toward the floor inside your foot. 5 full cycles per side.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex5">1:30</div>
+          <button class="timer-btn" id="btn-ex5" onclick="startTimer('ex5',90)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex5',90)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex5"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.muscleandstrength.com/exercises/worlds-greatest-stretch" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Watch demonstration
+      </a>
+    </div></div>
+  </div>
+
+  <!-- EX 6: Lateral lunge -->
+  <div class="card" id="ex6">
+    <div class="card-head" onclick="toggleCard('ex6')">
+      <div class="card-icon" style="background:#fce4d6;">🧎</div>
+      <div class="card-text">
+        <div class="card-name">Lateral lunge with reach</div>
+        <div class="card-sub">8 each side · 75 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ground -->
+          <line x1="20" y1="118" x2="240" y2="118" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- Left foot (straight leg) -->
+          <ellipse cx="195" cy="118" rx="12" ry="5" fill="#52b788"/>
+          <!-- Right foot (bent knee, stepped wide) -->
+          <ellipse cx="62" cy="118" rx="12" ry="5" fill="#52b788"/>
+          <!-- Left leg straight -->
+          <line x1="195" y1="118" x2="158" y2="72" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- Right leg bent at knee -->
+          <line x1="62" y1="118" x2="84" y2="88" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <line x1="84" y1="88" x2="108" y2="72" stroke="#2d6a4f" stroke-width="7" stroke-linecap="round"/>
+          <!-- Hips -->
+          <ellipse cx="133" cy="72" rx="28" ry="12" fill="#2d6a4f"/>
+          <!-- Torso leaning toward right -->
+          <line x1="130" y1="68" x2="100" y2="44" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round"/>
+          <!-- Head -->
+          <circle cx="92" cy="32" r="15" fill="#52b788"/>
+          <circle cx="88" cy="29" r="2" fill="#1b4332"/>
+          <circle cx="96" cy="29" r="2" fill="#1b4332"/>
+          <!-- Neck -->
+          <line x1="100" y1="44" x2="93" y2="46" stroke="#52b788" stroke-width="6" stroke-linecap="round"/>
+          <!-- Both arms reaching down toward right foot -->
+          <line x1="100" y1="48" x2="76" y2="100" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <line x1="100" y1="48" x2="68" y2="104" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- hands near foot -->
+          <ellipse cx="72" cy="106" rx="8" ry="5" fill="#c9714a" opacity="0.7"/>
+          <!-- Arrow showing wide step -->
+          <path d="M 120 118 L 68 118" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="4,2"/>
+          <polygon points="68,118 76,114 76,122" fill="#c9714a"/>
+          <text x="130" y="128" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Step wide · sit into hip · reach toward foot</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Wide ball retrieval & court coverage</div>
+      <div class="cue-text">Feet together. Step wide right, bending right knee and sitting back into your hip. Keep left leg straight. Reach both arms toward right foot. Push off to return. Keep chest up — don't collapse forward.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex6">1:15</div>
+          <button class="timer-btn" id="btn-ex6" onclick="startTimer('ex6',75)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex6',75)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex6"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.youtube.com/results?search_query=lateral+lunge+with+reach+mobility" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Search YouTube
+      </a>
+    </div></div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase-head">
+    <div class="phase-pip" style="background:#b06aaa;"></div>
+    <span class="phase-name">Phase 4 — Shoulder & wrist</span>
+    <span class="phase-dur">3 min</span>
+  </div>
+
+  <!-- EX 7: Doorway chest opener -->
+  <div class="card" id="ex7">
+    <div class="card-head" onclick="toggleCard('ex7')">
+      <div class="card-icon" style="background:#f3e4f5;">💪</div>
+      <div class="card-text">
+        <div class="card-name">Doorway chest opener</div>
+        <div class="card-sub">3 × 20 s holds · 75 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="140" viewBox="0 0 260 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Doorframe -->
+          <rect x="72" y="10" width="116" height="120" rx="4" fill="none" stroke="#c8e6c9" stroke-width="3"/>
+          <!-- Left doorpost -->
+          <rect x="72" y="10" width="12" height="120" rx="2" fill="#c8e6c9"/>
+          <!-- Right doorpost -->
+          <rect x="176" y="10" width="12" height="120" rx="2" fill="#c8e6c9"/>
+          <!-- Top bar -->
+          <rect x="72" y="10" width="116" height="12" rx="2" fill="#c8e6c9"/>
+          <!-- Ground -->
+          <line x1="20" y1="130" x2="240" y2="130" stroke="#c8e6c9" stroke-width="2"/>
+          <!-- Figure standing in doorway, leaning forward, forearms on frame -->
+          <!-- Feet -->
+          <ellipse cx="120" cy="130" rx="10" ry="4" fill="#52b788"/>
+          <ellipse cx="140" cy="130" rx="10" ry="4" fill="#52b788"/>
+          <!-- Legs -->
+          <line x1="120" y1="128" x2="124" y2="100" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <line x1="140" y1="128" x2="136" y2="100" stroke="#2d6a4f" stroke-width="6" stroke-linecap="round"/>
+          <!-- Torso leaning slightly forward -->
+          <line x1="130" y1="100" x2="125" y2="62" stroke="#2d6a4f" stroke-width="8" stroke-linecap="round"/>
+          <!-- Left forearm on left doorpost at 90° -->
+          <line x1="122" y1="72" x2="84" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <line x1="84" y1="72" x2="84" y2="50" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- Right forearm on right doorpost at 90° -->
+          <line x1="122" y1="72" x2="176" y2="72" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <line x1="176" y1="72" x2="176" y2="50" stroke="#2d6a4f" stroke-width="5" stroke-linecap="round"/>
+          <!-- Head -->
+          <circle cx="122" cy="48" r="15" fill="#52b788"/>
+          <circle cx="118" cy="45" r="2" fill="#1b4332"/>
+          <circle cx="126" cy="45" r="2" fill="#1b4332"/>
+          <!-- Neck -->
+          <line x1="124" y1="62" x2="122" y2="62" stroke="#52b788" stroke-width="7" stroke-linecap="round"/>
+          <!-- Chest stretch arrows pointing outward -->
+          <path d="M 108 82 L 90 82" stroke="#c9714a" stroke-width="2" fill="none"/>
+          <polygon points="90,82 96,78 96,86" fill="#c9714a"/>
+          <path d="M 150 82 L 168 82" stroke="#c9714a" stroke-width="2" fill="none"/>
+          <polygon points="168,82 162,78 162,86" fill="#c9714a"/>
+          <text x="130" y="138" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Forearms on frame · lean forward gently</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Unlocks serve power</div>
+      <div class="cue-text">Stand in a doorway, forearms on the frame at 90°. Gently lean forward until you feel a stretch across chest and front of shoulders. Hold 20 s. Keep shoulders down — don't shrug.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex7">1:15</div>
+          <button class="timer-btn" id="btn-ex7" onclick="startTimer('ex7',75)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex7',75)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex7"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.youtube.com/results?search_query=doorway+chest+stretch+shoulder+opener" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Search YouTube
+      </a>
+    </div></div>
+  </div>
+
+  <!-- EX 8: Wrist circles -->
+  <div class="card" id="ex8">
+    <div class="card-head" onclick="toggleCard('ex8')">
+      <div class="card-icon" style="background:#f3e4f5;">✋</div>
+      <div class="card-text">
+        <div class="card-name">Wrist circles & prayer stretch</div>
+        <div class="card-sub">10 circles + 20 s hold · 60 s</div>
+      </div>
+      <div class="card-chevron">▼</div>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="ex-illustration">
+        <svg width="260" height="130" viewBox="0 0 260 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Left panel: wrist circles -->
+          <g transform="translate(10,5)">
+            <text x="55" y="12" font-size="9" fill="#888" text-anchor="middle" font-family="sans-serif">WRIST CIRCLES</text>
+            <!-- Two forearms held forward -->
+            <rect x="30" y="50" width="14" height="50" rx="7" fill="#2d6a4f"/>
+            <rect x="66" y="50" width="14" height="50" rx="7" fill="#2d6a4f"/>
+            <!-- Fists -->
+            <ellipse cx="37" cy="104" rx="12" ry="10" fill="#52b788"/>
+            <ellipse cx="73" cy="104" rx="12" ry="10" fill="#52b788"/>
+            <!-- Circle arrows around fists -->
+            <path d="M 25 100 A 14 14 0 1 1 25 108" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+            <polygon points="25,108 20,102 30,100" fill="#c9714a"/>
+            <path d="M 61 100 A 14 14 0 1 0 61 108" stroke="#c9714a" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+            <polygon points="85,100 82,108 88,106" fill="#c9714a"/>
+          </g>
+          <!-- Divider -->
+          <line x1="128" y1="15" x2="128" y2="115" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="4,3"/>
+          <!-- Right panel: prayer stretch -->
+          <g transform="translate(138,5)">
+            <text x="52" y="12" font-size="9" fill="#888" text-anchor="middle" font-family="sans-serif">PRAYER STRETCH</text>
+            <!-- Two palms pressed together, fingers up -->
+            <!-- Left palm -->
+            <rect x="30" y="30" width="18" height="55" rx="6" fill="#52b788"/>
+            <!-- Right palm -->
+            <rect x="52" y="30" width="18" height="55" rx="6" fill="#52b788"/>
+            <!-- Fingers (simplified) -->
+            <rect x="30" y="18" width="5" height="20" rx="3" fill="#52b788"/>
+            <rect x="37" y="14" width="5" height="22" rx="3" fill="#52b788"/>
+            <rect x="44" y="12" width="5" height="24" rx="3" fill="#52b788"/>
+            <rect x="51" y="14" width="5" height="22" rx="3" fill="#52b788"/>
+            <rect x="58" y="18" width="5" height="20" rx="3" fill="#52b788"/>
+            <!-- Arrow pointing down (hands lowering) -->
+            <line x1="50" y1="92" x2="50" y2="108" stroke="#c9714a" stroke-width="2" fill="none"/>
+            <polygon points="50,108 46,102 54,102" fill="#c9714a"/>
+            <text x="50" y="118" font-size="9" fill="#c9714a" text-anchor="middle" font-family="sans-serif">lower slowly</text>
+          </g>
+          <text x="130" y="128" font-size="10" fill="#888" text-anchor="middle" font-family="sans-serif">Circles each direction · then prayer hold</text>
+        </svg>
+      </div>
+      <div class="tennis-tag">🎾 Guards against tennis elbow</div>
+      <div class="cue-text">Make fists, rotate both wrists 10 times each direction. Then press palms together in front of your chest and slowly lower hands toward your waist, keeping palms together, until you feel a forearm stretch. Hold 20 s.</div>
+      <div class="timer-section">
+        <div class="timer-row">
+          <div class="timer-display" id="disp-ex8">1:00</div>
+          <button class="timer-btn" id="btn-ex8" onclick="startTimer('ex8',60)">Start</button>
+          <button class="timer-reset" onclick="resetTimer('ex8',60)">Reset</button>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar-fill" id="bar-ex8"></div></div>
+      </div><br>
+      <a class="vid-link" href="https://www.youtube.com/results?search_query=wrist+circles+prayer+stretch+forearm+mobility" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="white" stroke-width="1"/><polygon points="5.5,4 10,7 5.5,10" fill="white"/></svg>
+        Search YouTube
+      </a>
+    </div></div>
+  </div>
+
+  <!-- COMPLETE BANNER -->
+  <div class="complete-banner" id="completeBanner">
+    <div class="complete-emoji">🎾</div>
+    <div class="complete-title">Court ready!</div>
+    <div class="complete-sub">All 9 exercises done · Great work today</div>
+  </div>
+
+  <button class="done-btn" id="doneBtn" onclick="markAllDone()">
+    Mark all done · Go play! 🎾
+  </button>
+
+</div>
+
+<div class="footer">Add to Home Screen in Safari for quick daily access</div>
+
+<script>
+  const TOTAL = 9;
+  const done = new Set();
+  const timers = {};
+
+  function toggleCard(id) {
+    document.getElementById(id).classList.toggle('active');
+  }
+
+  function fmtTime(s) {
+    return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  }
+
+  function startTimer(id, total) {
+    if (!timers[id]) timers[id] = { remaining: total, total: total, running: false, interval: null };
+    const t = timers[id];
+    if (t.running) {
+      clearInterval(t.interval);
+      t.running = false;
+      document.getElementById('btn-'+id).textContent = 'Resume';
+      document.getElementById('btn-'+id).classList.remove('running');
+      return;
+    }
+    t.running = true;
+    document.getElementById('btn-'+id).textContent = 'Pause';
+    document.getElementById('btn-'+id).classList.add('running');
+    t.interval = setInterval(() => {
+      t.remaining--;
+      document.getElementById('disp-'+id).textContent = fmtTime(t.remaining);
+      document.getElementById('bar-'+id).style.width = Math.round((t.remaining/t.total)*100) + '%';
+      if (t.remaining <= 0) {
+        clearInterval(t.interval);
+        t.running = false;
+        const btn = document.getElementById('btn-'+id);
+        btn.textContent = 'Done ✓';
+        btn.classList.remove('running');
+        btn.style.background = '#2d6a4f';
+        document.getElementById('bar-'+id).style.width = '0%';
+        markExDone(id);
+        if (navigator.vibrate) navigator.vibrate([100,50,100]);
+      }
+    }, 1000);
+  }
+
+  function resetTimer(id, total) {
+    if (timers[id]) { clearInterval(timers[id].interval); timers[id] = null; }
+    document.getElementById('disp-'+id).textContent = fmtTime(total);
+    document.getElementById('bar-'+id).style.width = '100%';
+    const btn = document.getElementById('btn-'+id);
+    btn.textContent = 'Start';
+    btn.classList.remove('running');
+    btn.style.background = '';
+  }
+
+  function markExDone(id) {
+    const idx = parseInt(id.replace('ex',''));
+    done.add(idx);
+    const card = document.getElementById(id);
+    card.style.borderColor = '#52b788';
+    const nm = card.querySelector('.card-name');
+    if (!nm.textContent.includes('✓')) nm.textContent += ' ✓';
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const n = done.size;
+    const pct = Math.round((n/TOTAL)*100);
+    document.getElementById('globalProg').style.width = pct + '%';
+    document.getElementById('progText').textContent = n + ' of ' + TOTAL + ' done';
+    document.getElementById('progPct').textContent = pct + '%';
+    if (n === TOTAL) showComplete();
+  }
+
+  function markAllDone() {
+    for (let i=0;i<TOTAL;i++) markExDone('ex'+i);
+    showComplete();
+  }
+
+  function showComplete() {
+    document.getElementById('completeBanner').classList.add('show');
+    const btn = document.getElementById('doneBtn');
+    btn.classList.add('done-state');
+    btn.textContent = '🎾 Have a great game today!';
+    btn.onclick = null;
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
